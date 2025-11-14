@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Challenge Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .question-box {
+            background: #f7f7f7;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .question {
+            font-size: 2.5em;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .answer-input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .game-over {
+            display: none;
+            text-align: center;
+        }
+
+        .game-over h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #764ba2;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .play-again-btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .play-again-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚡ Math Challenge</h1>
+        
+        <div id="gameArea">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Time</div>
+                    <div class="stat-value" id="timer">60</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Streak</div>
+                    <div class="stat-value" id="streak">0</div>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <div class="question" id="question">Click Start!</div>
+                <input type="number" id="answerInput" class="answer-input" placeholder="Your answer" disabled>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Start Game</button>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>🎮 Game Over!</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <p style="font-size: 1.2em; color: #666;">Great job! Keep practicing!</p>
+            <button class="play-again-btn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 60;
+        let currentAnswer = 0;
+        let gameActive = false;
+        let timerInterval;
+        let num1, num2, operation;
+
+        const operations = ['+', '-', '×'];
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const streakEl = document.getElementById('streak');
+        const questionEl = document.getElementById('question');
+        const answerInput = document.getElementById('answerInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const feedbackEl = document.getElementById('feedback');
+        const gameArea = document.getElementById('gameArea');
+        const gameOver = document.getElementById('gameOver');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 20) + 1;
+            num2 = Math.floor(Math.random() * 20) + 1;
+            operation = operations[Math.floor(Math.random() * operations.length)];
+
+            if (operation === '+') {
+                currentAnswer = num1 + num2;
+            } else if (operation === '-') {
+                if (num1 < num2) [num1, num2] = [num2, num1];
+                currentAnswer = num1 - num2;
+            } else if (operation === '×') {
+                num1 = Math.floor(Math.random() * 12) + 1;
+                num2 = Math.floor(Math.random() * 12) + 1;
+                currentAnswer = num1 * num2;
+            }
+
+            questionEl.textContent = `${num1} ${operation} ${num2} = ?`;
+            answerInput.value = '';
+            answerInput.focus();
+        }
+
+        function checkAnswer() {
+            if (!gameActive) {
+                startGame();
+                return;
+            }
+
+            const userAnswer = parseInt(answerInput.value);
+
+            if (isNaN(userAnswer)) {
+                showFeedback('Please enter a number!', 'wrong');
+                return;
+            }
+
+            if (userAnswer === currentAnswer) {
+                const points = 10 + (streak * 2);
+                score += points;
+                streak++;
+                scoreEl.textContent = score;
+                streakEl.textContent = streak;
+                showFeedback(`✓ Correct! +${points} points`, 'correct');
+                setTimeout(generateQuestion, 800);
+            } else {
+                streak = 0;
+                streakEl.textContent = streak;
+                showFeedback(`✗ Wrong! The answer was ${currentAnswer}`, 'wrong');
+                setTimeout(generateQuestion, 1500);
+            }
+        }
+
+        function showFeedback(message, type) {
+            feedbackEl.textContent = message;
+            feedbackEl.className = `feedback ${type}`;
+            setTimeout(() => {
+                feedbackEl.className = 'feedback';
+            }, type === 'correct' ? 800 : 1500);
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            score = 0;
+            streak = 0;
+            timeLeft = 60;
+            gameActive = true;
+
+            scoreEl.textContent = score;
+            streakEl.textContent = streak;
+            timerEl.textContent = timeLeft;
+
+            gameArea.style.display = 'block';
+            gameOver.style.display = 'none';
+
+            answerInput.disabled = false;
+            submitBtn.textContent = 'Submit Answer';
+            submitBtn.onclick = checkAnswer;
+
+            generateQuestion();
+            startTimer();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            gameActive = false;
+            gameArea.style.display = 'none';
+            gameOver.style.display = 'block';
+            finalScoreEl.textContent = score;
+        }
+
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && gameActive) {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
